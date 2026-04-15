@@ -64,10 +64,12 @@ button{
 .hero{
   padding: 10rem 1rem;
   background-image: url(../Images/cut.jpg);
-  background-size: cover;
+  background-size: contain;
   background-position: center;
-  border: 1px solid rgba(229, 255, 0, 0.705);
-  min-height: 50vh;
+  background-repeat: no-repeat;
+  border-radius: 50px;
+  min-height: 30vh;
+  background-color: #8E80808C;
 }
 
 
