@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Welcome <%= user.username %> 👋</h2>
+
+<a href="/logout">Logout</a>
+
+<hr>
+
+<h3>Create Post</h3>
+
+<form action="/create-post" method="POST">
+  <input name="title" placeholder="Title" required />
+  <textarea name="body" placeholder="Content" required></textarea>
+  <button>Post</button>
+</form>
+
+<hr>
+
+<h3>Posts</h3>
+
+<% posts.forEach(post => { %>
+  <div>
+    <h4><%= post.title %></h4>
+    <p><%= post.body %></p>
+    <small>by <%= post.username %></small>
+  </div>
+  <hr>
+<% }) %>
+
+</body>
+</html>

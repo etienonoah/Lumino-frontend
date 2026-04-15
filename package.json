@@ -1,0 +1,28 @@
+{
+  "name": "lumino-backend",
+  "version": "1.0.0",
+  "description": "Backend for Lumino sales app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.8.0",
+    "cookie-parser": "^1.4.7",
+    "db": "^6.0.3",
+    "dotenv": "^17.4.1",
+    "ejs": "^5.0.1",
+    "express": "^4.22.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongo": "^0.1.0",
+    "nodemailer": "^8.0.5",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
