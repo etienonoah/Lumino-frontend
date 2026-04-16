@@ -6,14 +6,21 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const cookieParser = require("cookie-parser")
 const Database = require("better-sqlite3")
+const cors = require("cors")
 
 const app = express()
 const db = new Database("lumino.db")
+db.pragma("journal_mode = WAL")
 
 // -------------------- MIDDLEWARE --------------------
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(cookieParser())
+
+app.use(cors())
+
+
+app.use(express.static(path.join(__dirname, "lumino-frontend")))
 
 app.set("view engine", "ejs")
 app.set("views", path.join(__dirname, "views"))
@@ -24,7 +31,7 @@ app.use((req, res, next) => {
 
   if (token) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      const decoded = jwt.verify(token, process.env.JWTSECRET)
       req.user = decoded
     } catch {
       req.user = null
@@ -65,6 +72,23 @@ function requireAuth(req, res, next) {
   next()
 }
 
+//      Api (FOR FRONTEND JS)
+let sales = []
+
+app.get('/api/sales', (req, res) => {
+  res.json(sales)
+})
+
+app.post('/api/sales', (req, res) => {
+  sales.push(req.body)
+  res.json({ success: true })
+})
+
+app.delete('/api/sales/:index', (req, res) => {
+  sales.splice(req.params.index, 1)
+  res.json({ success: true })
+})
+
 // -------------------- HOME (DASHBOARD) --------------------
 app.get("/", requireAuth, (req, res) => {
   const posts = db.prepare(`
@@ -88,20 +112,48 @@ app.post("/register", async (req, res) => {
 
   if (!username || !email || !phone || !password) {
     errors.push("All fields are required")
-    return res.render("register", { errors })
+    return res.render("register", { errors: ["All fields are required"] })
   }
 
   try {
     const hashed = await bcrypt.hash(password, 10)
 
-    db.prepare(`
+    //important line
+
+    const result = db.prepare(`
       INSERT INTO users (username, email, phone, password)
       VALUES (?, ?, ?, ?)
     `).run(username, email, phone, hashed)
+    // auto login starts here
+    const token = jwt.sign(
+      {
+        id: result.lastInsertRowid,
+        username: username,
+        email: email,
+        phone: phone
+      },
+      process.env.JWTSECRET,
+      { expiresIn: "1d" }
+    )
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 86400000
+    })
+    // redirect to dashboard/home
+    res.redirect("/")
 
-    res.redirect("/login")
-  } catch {
-    res.render("register", { errors: ["User already exists"] })
+  } catch (err)  {
+     console.log(err.message)
+     
+     if (err.message.includes("users.email")) {
+      return res.render("register", { errors: ["Email already exists"] })
+     }
+      if (err.message.includes("users.username")) {
+        return res.render("register", { errors: ["Username already exists"] })
+      }
+
+     res.render("register", { errors: ["User already exists"] })
   }
 })
 
@@ -135,7 +187,7 @@ app.post("/login", async (req, res) => {
       email: user.email,
       phone: user.phone
     },
-    process.env.JWT_SECRET,
+    process.env.JWTSECRET,
     { expiresIn: "1d" }
   )
 
@@ -167,6 +219,9 @@ app.get("/logout", (req, res) => {
 })
 
 // -------------------- START --------------------
+
+
+
 app.listen(3000, () => {
   console.log("Server running on port 3000")
 })
